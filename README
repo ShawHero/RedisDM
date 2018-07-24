@@ -1,0 +1,46 @@
+http://localhost:8080/swagger-ui.html
+
+购物流数据格式.
+POST
+{
+  "pattern": "CART_*",
+  "sourceAddress": [
+    {
+      "ip": "192.168.235.93",
+      "password": null,
+      "port": 7001
+    },
+	{
+      "ip": "192.168.235.93",
+      "password": null,
+      "port": 7002
+    },
+	{
+      "ip": "192.168.235.93",
+      "password": null,
+      "port": 7003
+    },
+	{
+      "ip": "192.168.235.70",
+      "password": null,
+      "port": 7001
+    },
+	{
+      "ip": "192.168.235.70",
+      "password": null,
+      "port": 7002
+    },
+	{
+      "ip": "192.168.235.70",
+      "password": null,
+      "port": 7003
+    }
+  ],
+  "targetAddress": [
+    {
+      "ip": "r-wz9fe47347a48764.redis.rds.aliyuncs.com",
+      "password": "Hh(*&987",
+      "port": 6379
+    }
+  ]
+}

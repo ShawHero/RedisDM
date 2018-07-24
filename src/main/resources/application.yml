@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: RedisDM
+
+swagger:
+  enabled: true
+  title: "Redis数据迁移"
+  description: "Redis数据迁移"
+  version: 1.0.0
+  license: "Apache License, Version 2.0"
+  licenseUrl: "https://www.apache.org/licenses/LICENSE-2.0.html"
+  contact:
+    name: shaw
+    url: www.hh.global
+    email: xiaoxiong@hh.global
+  base-package: global.hh
+  base-path: /**
+  exclude-path: /error, /ops/**
