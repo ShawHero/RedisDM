@@ -1,4 +1,4 @@
-package global.hh.redisdm;
+package cn.itshaw.redisdm;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

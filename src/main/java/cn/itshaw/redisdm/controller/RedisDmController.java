@@ -1,9 +1,9 @@
-package global.hh.redisdm.controller;
+package cn.itshaw.redisdm.controller;
 
 import java.util.*;
 
-import global.hh.redisdm.bean.RedisDMBean;
-import global.hh.redisdm.bean.RedisNode;
+import cn.itshaw.redisdm.bean.RedisDMBean;
+import cn.itshaw.redisdm.bean.RedisNode;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -16,14 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import redis.clients.jedis.*;
 
-/**
- * Function:
- * <P> 版权所有 ©2013 Biostime Inc.. All Rights Reserved
- * <p> 未经本公司许可，不得以任何方式复制或使用本程序任何部分 <p>
- * User: 12360
- * Date: 2018/7/19
- * Time: 17:32
- */
 @Slf4j
 @Api(tags="Redis数据迁移")
 @RestController
@@ -33,16 +25,17 @@ public class RedisDmController {
     @ApiOperation("Redis数据迁移")
     @PostMapping("/redisdm/")
     public  @ApiParam("迁移是否成功") String redisDM(@RequestBody RedisDMBean redisDMBean) throws Exception {
+        int count;
         try {
             String x = validate(redisDMBean);
             if (x != null) {
                 return x;
             }
-            redisDataMove(redisDMBean.getSourceAddress(),redisDMBean.getTargetAddress(),redisDMBean.getPattern());
+            count = redisDataMove(redisDMBean.getSourceAddress(),redisDMBean.getTargetAddress(),redisDMBean.getPattern());
         }catch (Exception ex){
             return "数据迁移失败！"+ex.getMessage();
         }
-        return  "数据迁移成功！";
+        return  "数据迁移成功！迁移key的数据为："+count;
     }
 
     private String validate(@RequestBody RedisDMBean redisDMBean) {
@@ -62,15 +55,15 @@ public class RedisDmController {
      * @param targetAddress
      * @param pattern
      */
-    public static void redisDataMove(List<RedisNode> sourceAddress,List<RedisNode> targetAddress,String pattern){
-
-       for(RedisNode targetAddr : targetAddress){
+    public static int redisDataMove(List<RedisNode> sourceAddress,List<RedisNode> targetAddress,String pattern){
+        int sumCount = 0;
+        for(RedisNode targetAddr : targetAddress){
 
             Jedis targetJedis = new Jedis(targetAddr.getIp(), targetAddr.getPort());
 
-           if(!StringUtils.isEmpty(targetAddr.getPassword())) {
-               targetJedis.auth(targetAddr.getPassword());
-           }
+            if(!StringUtils.isEmpty(targetAddr.getPassword())) {
+                targetJedis.auth(targetAddr.getPassword());
+            }
 
             for(RedisNode sourceAddr : sourceAddress){
 
@@ -81,14 +74,13 @@ public class RedisDmController {
                 }
 
                 ScanParams scanParams = new ScanParams();
-                scanParams.count(10000);
+                scanParams.count(100);
                 scanParams.match(pattern);
                 String cursor = "0";
                 ScanResult<String> scanResult = sourceJedis.scan(cursor, scanParams);
                 int count = 0;
                 List<String> scanResultList = scanResult.getResult();
-                //while (!CollectionUtils.isEmpty(scanResult.getResult())) {
-                if (!CollectionUtils.isEmpty(scanResultList)) {
+                while (!CollectionUtils.isEmpty(scanResultList)) {
                     for(String key : scanResult.getResult()){
                         String keyType;
                         try{
@@ -107,18 +99,22 @@ public class RedisDmController {
                             case "string":
                                 String strValues = sourceJedis.get(key);
                                 targetJedis.set(key, strValues);
+                                count++;
                                 break;
                             case "hash":
                                 Map<String, String> hashValues = sourceJedis.hgetAll(key);
                                 targetJedis.hmset(key, hashValues);
+                                count++;
                                 break;
                             case "set":
                                 Set<String> setValues = sourceJedis.smembers(key);
                                 targetJedis.sadd(key, setValues.toArray(new String[setValues.size()]));
+                                count++;
                                 break;
                             case "list":
                                 List<String> listValues = sourceJedis.lrange(key, 0, sourceJedis.llen(key) - 1);
                                 targetJedis.lpush(key, listValues.toArray(new String[listValues.size()]));
+                                count++;
                                 break;
                             case "zset":
                                 Set<String> zsetValues = sourceJedis.zrange(key,0,-1);
@@ -126,6 +122,7 @@ public class RedisDmController {
                                     Double score = sourceJedis.zscore(key, member);
                                     targetJedis.zadd(key,score,member);
                                 }
+                                count++;
                                 break;
                             case "bitmaps":
                             case "hyperloglogs":
@@ -135,13 +132,16 @@ public class RedisDmController {
                                 log.info("type of '{}' does not support!", keyType);
                                 break;
                         }
-                        count++;
                     }
-                  /*  scanResultList = sourceJedis.scan(cursor, scanParams).getResult();*/
+                    scanResult = sourceJedis.scan(scanResult.getStringCursor(), scanParams);
+                    scanResultList = scanResult.getResult();
                 }
+                sumCount = sumCount + count;
                 log.info("from :" +sourceAddr+ ",to:"+targetAddr+ "  move success! count size:" + count);
             }
 
-       }
+        }
+        log.info("move success! sum count size:" + sumCount);
+        return sumCount;
     }
 }

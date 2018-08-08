@@ -1,4 +1,4 @@
-package global.hh.redisdm;
+package cn.itshaw.redisdm;
 
 import com.didispace.swagger.EnableSwagger2Doc;
 import org.springframework.boot.SpringApplication;
