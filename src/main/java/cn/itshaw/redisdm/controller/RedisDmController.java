@@ -74,13 +74,11 @@ public class RedisDmController {
                 }
 
                 ScanParams scanParams = new ScanParams();
-                scanParams.count(100);
+                scanParams.count(10000);
                 scanParams.match(pattern);
                 String cursor = "0";
                 ScanResult<String> scanResult = sourceJedis.scan(cursor, scanParams);
                 int count = 0;
-                List<String> scanResultList = scanResult.getResult();
-                while (!CollectionUtils.isEmpty(scanResultList)) {
                     for(String key : scanResult.getResult()){
                         String keyType;
                         try{
@@ -134,7 +132,6 @@ public class RedisDmController {
                         }
                     }
                     scanResult = sourceJedis.scan(scanResult.getStringCursor(), scanParams);
-                    scanResultList = scanResult.getResult();
                 }
                 sumCount = sumCount + count;
                 log.info("from :" +sourceAddr+ ",to:"+targetAddr+ "  move success! count size:" + count);

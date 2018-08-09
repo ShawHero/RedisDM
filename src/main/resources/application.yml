@@ -16,6 +16,6 @@ swagger:
     name: shaw
     url: www.hh.global
     email: xiaoxiong@hh.global
-  base-package: global.hh
+  base-package: cn.itshaw
   base-path: /**
   exclude-path: /error, /ops/**
