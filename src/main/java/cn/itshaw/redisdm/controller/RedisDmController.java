@@ -79,6 +79,7 @@ public class RedisDmController {
                 String cursor = "0";
                 ScanResult<String> scanResult = sourceJedis.scan(cursor, scanParams);
                 int count = 0;
+                while (!scanResult.getStringCursor().equals(cursor)) {
                     for(String key : scanResult.getResult()){
                         String keyType;
                         try{
